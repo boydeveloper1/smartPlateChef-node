@@ -6,14 +6,10 @@ const port = 5000;
 const mongoose = require("mongoose");
 const cors = require("cors");
 
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
-
 const path = require("path");
 
 // for passing all incoming request body
 const bodyParser = require("body-parser");
-
-const ExpressError = require("./utilities/ExpressError");
 
 // importing event Routes
 const eventsRoutes = require("./routes/events");
@@ -21,12 +17,7 @@ const eventsRoutes = require("./routes/events");
 // importing users Routes
 const usersRoutes = require("./routes/users");
 
-// importing contact toutes
-const contactRoutes = require("./routes/contacts");
-
-const User = require("./models/user");
-
-const dbUrl = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@event-hive.hfexoxu.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
+const dbUrl = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@smart-plate.3qfsqd3.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
 
 // Connecting To our Mongoose database with different options embedded
 mongoose.connect(dbUrl, {
@@ -68,52 +59,7 @@ app.use("/api/events", eventsRoutes);
 // All users routes hit this middleware
 app.use("/api/users", usersRoutes);
 
-// All contact routes hits this middleware
-app.use("/api/secured", contactRoutes);
-
 app.use(cors());
-
-//stripe function for payment intent
-app.post("/create-payment-intent", async (req, res, next) => {
-  const { amount, user } = req.body;
-
-  let paymentIntent;
-  try {
-    paymentIntent = await stripe.paymentIntents.create({
-      amount: amount,
-      currency: "cad",
-      payment_method_types: ["card"],
-    });
-  } catch (err) {
-    const error = new ExpressError(
-      "Something went with processing payment",
-      500
-    );
-    return next(error);
-  }
-
-  // find the user that just bought the ticket - becuase a user should have created an account before buying
-  let userThatBoughtTicket;
-  try {
-    userThatBoughtTicket = await User.findById(user);
-  } catch (error) {
-    const err = new ExpressError(
-      "Something Went Wrong, could not find user that created event",
-      500
-    );
-    return next(err);
-  }
-
-  if (!userThatBoughtTicket) {
-    const error = new ExpressError(
-      "Could not find user that created event",
-      404
-    );
-    return next(error);
-  }
-
-  res.status(200).json({ clientSecret: paymentIntent.client_secret });
-});
 
 // Main Custom Error Handler - If there is an error encountered before here, then middleware triggers
 // express default middleware function
