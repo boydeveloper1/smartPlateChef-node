@@ -5,11 +5,6 @@ const ExpressError = require("../utilities/ExpressError");
 
 const mongoose = require("mongoose");
 
-const { cloudinary } = require("../cloudinary");
-
-// Translates the address the user enters to coordinates
-const getCoordsForAddress = require("../utilities/location");
-
 // Importing event model
 const Event = require("../models/event");
 
@@ -95,41 +90,6 @@ const getEventsByUserId = async (req, res, next) => {
   res.json({
     // getters to remove the underscore property in front of id
     events: events.map((event) => event.toObject({ getters: true })),
-  });
-};
-
-// Get bought events associated to a specific user
-const getBoughtEventsByUserId = async (req, res, next) => {
-  const { uid } = req.params;
-
-  // finding boughtEvents based on the user that created it
-  let boughtEvents;
-  try {
-    boughtEvents = await BoughtEvent.find({ userThatBought: uid });
-  } catch (err) {
-    const error = new ExpressError(
-      "Fetching BoughtEvent Failed, please try again later",
-      500
-    );
-    return next(error);
-  }
-
-  // didn't like the prompt whenever a user hits the page without an avent
-  // // if there is no boughtevent
-  // if (!boughtEvents || boughtEvents.length === 0) {
-  //   return next(
-  //     new ExpressError(
-  //       "Hmmm! Seems you've not bought a ticket yet. Mind buying one?",
-  //       404
-  //     )
-  //   );
-  // }
-
-  res.json({
-    // getters to remove the underscore property in front of id
-    boughtEvents: boughtEvents.map((event) =>
-      event.toObject({ getters: true })
-    ),
   });
 };
 
@@ -442,10 +402,6 @@ const deleteEvent = async (req, res, next) => {
     return next(err);
   }
 
-  // Deleting image from cloudinary after event is deleted
-  const filename = event.image.filename;
-  cloudinary.uploader.destroy(filename);
-
   try {
     // deleting a new event from a user within a session of independent transaction. deleting the event from document and remvoing the eventid from the user
     const session = await mongoose.startSession();
@@ -474,7 +430,6 @@ const deleteEvent = async (req, res, next) => {
 exports.getAllEvents = getAllEvents;
 exports.getEventById = getEventById;
 exports.getEventsByUserId = getEventsByUserId;
-exports.getBoughtEventsByUserId = getBoughtEventsByUserId;
 exports.createEvent = createEvent;
 exports.updateEvent = updateEvent;
 exports.deleteEvent = deleteEvent;

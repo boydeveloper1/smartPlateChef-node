@@ -11,11 +11,11 @@ const path = require("path");
 // for passing all incoming request body
 const bodyParser = require("body-parser");
 
-// importing event Routes
-const eventsRoutes = require("./routes/events");
+// // importing event Routes
+// const eventsRoutes = require("./routes/events");
 
-// importing users Routes
-const usersRoutes = require("./routes/users");
+// // importing users Routes
+// const usersRoutes = require("./routes/users");
 
 const dbUrl = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@smart-plate.3qfsqd3.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
 
@@ -53,11 +53,11 @@ app.use((req, res, next) => {
   next();
 });
 
-// All events routes hit this middleware
-app.use("/api/events", eventsRoutes);
+// // All events routes hit this middleware
+// app.use("/api/events", eventsRoutes);
 
-// All users routes hit this middleware
-app.use("/api/users", usersRoutes);
+// // All users routes hit this middleware
+// app.use("/api/users", usersRoutes);
 
 app.use(cors());
 
