@@ -6,13 +6,11 @@ const port = 5000;
 const mongoose = require("mongoose");
 const cors = require("cors");
 
-const path = require("path");
-
 // for passing all incoming request body
 const bodyParser = require("body-parser");
 
-// // importing event Routes
-// const eventsRoutes = require("./routes/events");
+// importing event Routes
+const smartPlateRoutes = require("./routes/smartPlate");
 
 // // importing users Routes
 // const usersRoutes = require("./routes/users");
@@ -35,9 +33,6 @@ db.once("open", () => {
 // This parses all incoming requests and extracts the body which is a Json, convert to array and objects and then call next
 app.use(bodyParser.json());
 
-// for our images route - to get images to the frontend
-app.use("/uploads/images", express.static(path.join("uploads", "images")));
-
 // this middleware adds a header to all responses before it then hits the specific route - this allows our front end to acknowledge reciept of the response from another server. "localhost:5000"
 // this fixes CORS error - getting requests from another domain
 app.use((req, res, next) => {
@@ -53,8 +48,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// // All events routes hit this middleware
-// app.use("/api/events", eventsRoutes);
+// All events routes hit this middleware
+app.use("/api/gpt4", smartPlateRoutes);
 
 // // All users routes hit this middleware
 // app.use("/api/users", usersRoutes);
