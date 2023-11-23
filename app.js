@@ -49,7 +49,7 @@ app.use((req, res, next) => {
 });
 
 // All events routes hit this middleware
-app.use("/api/gpt4", smartPlateRoutes);
+app.use("/api/gpt", smartPlateRoutes);
 
 // // All users routes hit this middleware
 // app.use("/api/users", usersRoutes);

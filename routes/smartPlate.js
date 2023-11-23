@@ -15,9 +15,10 @@ router.post(
     check("occasion").not().isEmpty(),
     check("cusineType").not().isEmpty(),
     check("servings").not().isEmpty(),
-    check("province").not().isEmpty(),
     check("ingredients").not().isEmpty(),
     check("dietaryPreferences").not().isEmpty(),
   ],
   smartPlate.gptRequest
 );
+
+module.exports = router;
