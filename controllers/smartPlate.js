@@ -17,106 +17,101 @@ const gptRequest = async (req, res, next) => {
       new ExpressError("Invalid inputs passed, please check your data", 422)
     );
   }
-  const {
-    spicelevel,
-    occasion,
-    cusineType,
-    servings,
-    ingredients,
-    dietaryPreferences,
-  } = req.body;
+  const { spicelevel, occasion, cusineType, ingredients, dietaryPreferences } =
+    req.body;
+
+  let title;
+  let recipeList;
+  let cookingTime;
+  let ingredientsList;
 
   try {
     // for the title response
+    const prompt1 = `Generate a catchy recipe title for a ${occasion} with ${cusineType} cuisine. Ingredients: ${ingredients}, Dietary preference: ${dietaryPreferences}, Spice level: ${spicelevel} (1-3). Limit to 10 words. NO QUOTATION MARKS IN THE REPONSE PLEASE!!`;
     const titleResponse = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
-      response_format: { type: "json_object" },
       messages: [
         {
           role: "system",
-          content: "You are a helpful assistant designed to output JSON.",
+          content:
+            "You are a helpful assistant, DO NOT add 'QUOTAION MARKS' in response",
         },
         {
           role: "user",
-          content: `Create a unique recipe title for a ${occasion} occasion with ${cusineType} cuisine. Include ingredients like ${ingredients}. The dietary preference specified is none ${dietaryPreferences}, and the spice level is ${spicelevel} (1 to 3, low to high).`,
+          content: prompt1,
         },
       ],
     });
-    const title = titleResponse.choices[0].message.content;
+    title = titleResponse.choices[0].message.content;
 
     // the recipe details
+    const prompt2 = `Provide numbered recipe instructions for a ${occasion} with ${cusineType} cuisine. Ingredients: "${ingredients}". No title. NUMBERED LIST INSTRUCTIONS. Dietary preference: ${dietaryPreferences}, Spice level: ${spicelevel} (1-3). Limit to 200 words.`;
     const recipeResponse = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
-      response_format: { type: "json_object" },
       messages: [
         {
           role: "system",
           content:
-            "You are a helpful assistant designed to output JSON. Give a List for the response",
+            "You are a helpful assistant, give me only 'instructions' for the dish as list. do not add ingredients",
         },
         {
           role: "user",
-          content: `Create a recipe instructions for a ${occasion} occasion with ${cusineType} cuisine. Include ingredients like ${ingredients}. The dietary preference specified is none ${dietaryPreferences}, and the spice level is ${spicelevel} (1 to 3, low to high). The recipe instructions you generate should be in a list format, one instruction per list`,
+          content: prompt2,
         },
       ],
     });
-    const recipe = recipeResponse.choices[0].message.content;
+    recipeList = recipeResponse.choices[0].message.content;
 
     // Generate cooking time
+    const prompt3 = `Provide the final cooking time for a single dish comprising of "${recipeList}" in minutes. "TIME IN MINUTES" IN THE RESPONSE`;
+
     const cookingTimeResponse = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
-      response_format: { type: "json_object" },
-      messages: [
-        {
-          role: "system",
-          content: "You are a helpful assistant designed to output JSON.",
-        },
-        {
-          role: "user",
-          content: `What is the recommended cooking time for this recipe "${recipe}", if it is to feed about ${servings} person or persons?`,
-        },
-      ],
-    });
-
-    const cookingTime = cookingTimeResponse.choices[0].message.content;
-
-    // Generate ingredients list
-    const ingredientsResponse = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      response_format: { type: "json_object" },
       messages: [
         {
           role: "system",
           content:
-            "You are a helpful assistant designed to output JSON. Give a List for the response",
+            "You are a helpful assistant, give response in time only, do not include any other word but the time in minutes (E.G 30 Minutes). Give  in minutes of just the final dish",
         },
         {
           role: "user",
-          content: `List the ingredients for the recipe "${recipe}" and include the user-specified ingredients ${ingredients}.no duplicates please. Provide the ingredients in a list format.`,
+          content: prompt3,
         },
       ],
     });
 
-    const ingredientsList = ingredientsResponse.choices[0].message.content;
+    cookingTime = cookingTimeResponse.choices[0].message.content;
 
-    // Generate calories
-    const caloriesResponse = await openai.chat.completions.create({
+    // // Generate ingredients list
+    const prompt4 = `List the ingredients for "${recipeList}" in a bullet-point format. Ingredients only, please.`;
+    const ingredientsResponse = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
-      response_format: { type: "json_object" },
       messages: [
         {
           role: "system",
-          content: "You are a helpful assistant designed to output JSON.",
+          content: "You are a helpful assistant",
         },
         {
           role: "user",
-          content: `What is the rough estimate of calories for this recipe "${recipe}". `,
+          content: prompt4,
         },
       ],
     });
 
-    const calories = caloriesResponse.choices[0].message.content;
-  } catch (error) {}
+    ingredientsList = ingredientsResponse.choices[0].message.content;
+
+    console.log("TITLE:", title);
+    console.log("RECIPE:", recipeList);
+    console.log("COOKING TIME:", cookingTime);
+    console.log("INGREDIENT LIST", ingredientsList);
+  } catch (error) {
+    const err = new ExpressError(
+      "Ooops! seems we experienced an error creating your recipe",
+      404
+    );
+    return next(error);
+  }
+  res.status(200).json({ title, recipeList, cookingTime, ingredientsList });
 };
 
 exports.gptRequest = gptRequest;
