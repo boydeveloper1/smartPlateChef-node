@@ -34,7 +34,7 @@ const gptRequest = async (req, res, next) => {
         {
           role: "system",
           content:
-            "You are a helpful assistant, DO NOT add 'QUOTAION MARKS' in response",
+            "You are a helpful assistant, DO NOT add 'QUOTAION MARKS' in response, the title should be innovative",
         },
         {
           role: "user",
@@ -99,11 +99,6 @@ const gptRequest = async (req, res, next) => {
     });
 
     ingredientsList = ingredientsResponse.choices[0].message.content;
-
-    console.log("TITLE:", title);
-    console.log("RECIPE:", recipeList);
-    console.log("COOKING TIME:", cookingTime);
-    console.log("INGREDIENT LIST", ingredientsList);
   } catch (error) {
     const err = new ExpressError(
       "Ooops! seems we experienced an error creating your recipe",
