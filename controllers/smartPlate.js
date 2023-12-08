@@ -6,6 +6,8 @@ const mongoose = require("mongoose");
 
 const SmartPlate = require("../models/smartplate");
 
+const User = require("../models/user");
+
 const openai = require("../utilities/chatgpt");
 
 // post req to gpt-4
@@ -109,7 +111,7 @@ const gptRequest = async (req, res, next) => {
   res.status(200).json({ title, recipeList, cookingTime, ingredientsList });
 };
 
-// creating a new Event route
+// saving a smartplate from gpt to a user
 const saveSmartPlate = async (req, res, next) => {
   // express-validator result configuration for server side validation - check routes for main configuration
   const errors = validationResult(req);
@@ -120,44 +122,27 @@ const saveSmartPlate = async (req, res, next) => {
   }
 
   const {
+    ingredients,
+    dietaryPreferences,
+    cusineType,
+    servings,
+    occasion,
     title,
-    description,
-    address,
-    organizer,
-    category,
-    province,
-    date,
-    startTime,
-    endTime,
-    price,
+    cookingTime,
+    recipe,
   } = req.body;
 
-  // Handling error in async-await - getCoordsForAddress throws and error if it fails, so this handles it.
-  let coordinates;
-  try {
-    coordinates = await getCoordsForAddress(address);
-  } catch (error) {
-    return next(error);
-  }
-
-  // this creates a new event in the database
-  const createdEvent = new Event({
+  // this creates a new smartPlate in the database
+  const savedRecipe = new SmartPlate({
+    ingredients,
+    dietaryPreferences,
+    cusineType,
+    servings,
+    occasion,
     title,
-    description,
-    address,
-    location: coordinates,
-    image: {
-      url: req.file.path,
-      filename: req.file.filename,
-    },
+    cookingTime,
+    recipe,
     creator: req.userData.userId,
-    organizer,
-    category,
-    province,
-    date,
-    startTime,
-    endTime,
-    price,
   });
 
   let user;
@@ -166,7 +151,7 @@ const saveSmartPlate = async (req, res, next) => {
     user = await User.findById(req.userData.userId);
   } catch (err) {
     const error = new ExpressError(
-      "Creating Event Failed, Please try again",
+      "Saving Recipe Failed, Please try again",
       500
     );
     return next(error);
@@ -180,24 +165,24 @@ const saveSmartPlate = async (req, res, next) => {
     return next(error);
   }
 
-  // creating a new event within a session of independent transaction. saving the event and addig the eventid to the user
+  // creating a new smartPlate within a session of independent transaction. saving the smartPlate and adding the smartPlateId to the user
   try {
     const session = await mongoose.startSession();
     session.startTransaction();
-    await createdEvent.save({ session: session });
-    // adding the id of createdEvent to the user, mongoose adds just the ID
-    user.events.push(createdEvent);
+    await savedRecipe.save({ session: session });
+    // adding the id of savedRecipe to the user, mongoose adds just the ID
+    user.smartPlates.push(savedRecipe);
     await user.save({ session: session });
     await session.commitTransaction();
   } catch (error) {
     const err = new ExpressError(
-      "Creating event failed, Please try again.",
+      "Saving Recipe failed, Please try again.",
       500
     );
     return next(error);
   }
 
-  res.status(201).json({ event: createdEvent.toObject({ getters: true }) });
+  res.status(201).json({ recipe: savedRecipe.toObject({ getters: true }) });
 };
 
 exports.gptRequest = gptRequest;
