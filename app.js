@@ -13,7 +13,7 @@ const bodyParser = require("body-parser");
 const smartPlateRoutes = require("./routes/smartPlate");
 
 // // importing users Routes
-// const usersRoutes = require("./routes/users");
+const usersRoutes = require("./routes/users");
 
 const dbUrl = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@smart-plate.3qfsqd3.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
 
@@ -52,9 +52,7 @@ app.use((req, res, next) => {
 app.use("/api/gpt", smartPlateRoutes);
 
 // // All users routes hit this middleware
-// app.use("/api/users", usersRoutes);
-
-app.use(cors());
+app.use("/api/users", usersRoutes);
 
 // Main Custom Error Handler - If there is an error encountered before here, then middleware triggers
 // express default middleware function

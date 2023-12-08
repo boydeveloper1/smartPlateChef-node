@@ -109,4 +109,96 @@ const gptRequest = async (req, res, next) => {
   res.status(200).json({ title, recipeList, cookingTime, ingredientsList });
 };
 
+// creating a new Event route
+const saveSmartPlate = async (req, res, next) => {
+  // express-validator result configuration for server side validation - check routes for main configuration
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return next(
+      new ExpressError("Invalid inputs passed, please check your data", 422)
+    );
+  }
+
+  const {
+    title,
+    description,
+    address,
+    organizer,
+    category,
+    province,
+    date,
+    startTime,
+    endTime,
+    price,
+  } = req.body;
+
+  // Handling error in async-await - getCoordsForAddress throws and error if it fails, so this handles it.
+  let coordinates;
+  try {
+    coordinates = await getCoordsForAddress(address);
+  } catch (error) {
+    return next(error);
+  }
+
+  // this creates a new event in the database
+  const createdEvent = new Event({
+    title,
+    description,
+    address,
+    location: coordinates,
+    image: {
+      url: req.file.path,
+      filename: req.file.filename,
+    },
+    creator: req.userData.userId,
+    organizer,
+    category,
+    province,
+    date,
+    startTime,
+    endTime,
+    price,
+  });
+
+  let user;
+  // checking to see if the id of the user exists in our database
+  try {
+    user = await User.findById(req.userData.userId);
+  } catch (err) {
+    const error = new ExpressError(
+      "Creating Event Failed, Please try again",
+      500
+    );
+    return next(error);
+  }
+
+  if (!user) {
+    const error = new ExpressError(
+      "Could not find user for the provided id",
+      404
+    );
+    return next(error);
+  }
+
+  // creating a new event within a session of independent transaction. saving the event and addig the eventid to the user
+  try {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    await createdEvent.save({ session: session });
+    // adding the id of createdEvent to the user, mongoose adds just the ID
+    user.events.push(createdEvent);
+    await user.save({ session: session });
+    await session.commitTransaction();
+  } catch (error) {
+    const err = new ExpressError(
+      "Creating event failed, Please try again.",
+      500
+    );
+    return next(error);
+  }
+
+  res.status(201).json({ event: createdEvent.toObject({ getters: true }) });
+};
+
 exports.gptRequest = gptRequest;
+exports.saveSmartPlate = saveSmartPlate;

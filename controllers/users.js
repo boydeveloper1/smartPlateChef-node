@@ -115,8 +115,7 @@ const signup = async (req, res, next) => {
 
   res.status(201).json({
     userId: createdUser.id,
-    email: createdUser.email,
-    name: createdUser.name,
+    name: createdUser.fullName,
     token: token,
   });
 };
@@ -171,7 +170,6 @@ const login = async (req, res, next) => {
       {
         userId: exisitingUser.id,
         email: exisitingUser.email,
-        image: exisitingUser.image.url,
       },
       process.env.JWT_KEY,
       { expiresIn: "1h" }
@@ -183,9 +181,7 @@ const login = async (req, res, next) => {
 
   res.json({
     userId: exisitingUser.id,
-    email: exisitingUser.email,
-    image: exisitingUser.image.url,
-    name: exisitingUser.name,
+    name: exisitingUser.fullName,
     token: token,
   });
 };

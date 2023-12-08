@@ -6,11 +6,14 @@ const router = express.Router();
 
 const users = require("../controllers/users.js");
 
+// Gets specific user
+router.get("/:uid", users.getUser);
+
 // Create a new user
 router.post(
   "/signup",
   [
-    check("name").not().isEmpty(),
+    check("fullName").not().isEmpty(),
     check("email").normalizeEmail().isEmail(),
     check("password").isLength({ min: 8 }),
   ],
