@@ -185,5 +185,30 @@ const saveSmartPlate = async (req, res, next) => {
   res.status(201).json({ recipe: savedRecipe.toObject({ getters: true }) });
 };
 
+// Get smartPlate associated to a user using the user id (uid)
+const getSmartPlateByUserId = async (req, res, next) => {
+  const { uid } = req.params;
+
+  // finding recipes based on the user that created it
+  let smartPlates;
+  try {
+    smartPlates = await SmartPlate.find({ creator: uid });
+  } catch (err) {
+    const error = new ExpressError(
+      "Fetching Recipe Failed, please try again later",
+      500
+    );
+    return next(error);
+  }
+
+  res.json({
+    // getters to remove the underscore property in front of id
+    smartPlate: smartPlate.map((smartPlate) =>
+      smartPlate.toObject({ getters: true })
+    ),
+  });
+};
+
 exports.gptRequest = gptRequest;
 exports.saveSmartPlate = saveSmartPlate;
+exports.getSmartPlateByUserId = getSmartPlateByUserId;

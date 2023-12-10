@@ -9,6 +9,9 @@ const checkAuth = require("../middleware/authentication");
 // Requiring the event controller
 const smartPlate = require("../controllers/smartPlate.js");
 
+// get smartPlates
+router.get("/", smartPlate.getSmartPlateByUserId);
+
 // post req to gpt-4
 router.post(
   "/",
