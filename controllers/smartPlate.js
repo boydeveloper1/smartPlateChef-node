@@ -203,12 +203,134 @@ const getSmartPlateByUserId = async (req, res, next) => {
 
   res.json({
     // getters to remove the underscore property in front of id
-    smartPlate: smartPlate.map((smartPlate) =>
+    smartPlates: smartPlates.map((smartPlate) =>
       smartPlate.toObject({ getters: true })
     ),
   });
 };
 
+//  deleting a recipe passes through this route
+const deleteRecipe = async (req, res, next) => {
+  const { sid } = req.params;
+
+  let smartPlate;
+
+  try {
+    smartPlate = await SmartPlate.findById(sid).populate("creator");
+  } catch (error) {
+    const err = new ExpressError(
+      "Something went wrong, could not delete recipe",
+      500
+    );
+    return next(err);
+  }
+
+  if (!smartPlate) {
+    const error = new ExpressError("Could not find recipe for this id", 404);
+    return next(error);
+  }
+
+  // AUTHORIZATION
+  if (smartPlate.creator.id !== req.userData.userId) {
+    const err = new ExpressError(
+      "You are not allowed to delete this recipe",
+      401
+    );
+    return next(err);
+  }
+
+  try {
+    // deleting a new recipe from a user within a session of independent transaction. deleting the recipe from document and remvoing the smartPlateId from the user
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    await smartPlate.deleteOne({ session: session });
+
+    // mongoose will remove the ID by just passing in the smartPlate
+    smartPlate.creator.smartPlates.pull(smartPlate);
+
+    await smartPlate.creator.save({ session: session });
+    await session.commitTransaction();
+  } catch (err) {
+    const error = new ExpressError(
+      "Something went wrong, could not delete the recipe",
+      500
+    );
+    return next(error);
+  }
+
+  res.status(200).json({ message: "Deleted Recipe." });
+};
+
+//  deleting all recipe passes through this route
+const deleteAllRecipe = async (req, res, next) => {
+  const { uid } = req.params;
+
+  let smartPlates;
+
+  try {
+    smartPlates = await SmartPlate.find({ creator: uid });
+  } catch (error) {
+    const err = new ExpressError(
+      "Something went wrong, could not delete recipes1",
+      500
+    );
+    return next(err);
+  }
+
+  let user;
+
+  try {
+    user = await User.findById(uid);
+  } catch (error) {
+    const err = new ExpressError(
+      "Something went wrong, could not delete recipes2",
+      500
+    );
+    return next(err);
+  }
+
+  if (!user || !smartPlates) {
+    const error = new ExpressError(
+      "Something went wrong, could not delete recipes3",
+      404
+    );
+    return next(error);
+  }
+
+  // AUTHORIZATION
+  if (user.id !== req.userData.userId) {
+    const err = new ExpressError(
+      "You are not allowed to delete these recipes",
+      401
+    );
+    return next(err);
+  }
+
+  try {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    // Delete all recipes
+    const deleted = await SmartPlate.deleteMany({ creator: uid });
+
+    // Clear the user's smartPlates array
+    user.smartPlates = [];
+    await user.save({ session: session });
+
+    await session.commitTransaction();
+  } catch (err) {
+    const error = new ExpressError(
+      "Something went wrong, could not delete the recipe",
+      500
+    );
+    return next(error);
+  }
+
+  res.status(200).json({ message: "Deleted Recipes." });
+};
+
 exports.gptRequest = gptRequest;
 exports.saveSmartPlate = saveSmartPlate;
 exports.getSmartPlateByUserId = getSmartPlateByUserId;
+exports.deleteRecipe = deleteRecipe;
+exports.deleteAllRecipe = deleteAllRecipe;

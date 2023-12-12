@@ -10,7 +10,7 @@ const checkAuth = require("../middleware/authentication");
 const smartPlate = require("../controllers/smartPlate.js");
 
 // get smartPlates
-router.get("/", smartPlate.getSmartPlateByUserId);
+router.get("/user/:uid", smartPlate.getSmartPlateByUserId);
 
 // post req to gpt-4
 router.post(
@@ -43,5 +43,9 @@ router.post(
   ],
   smartPlate.saveSmartPlate
 );
+
+router.delete("/:sid", smartPlate.deleteRecipe);
+
+router.delete("/all/:uid", smartPlate.deleteAllRecipe);
 
 module.exports = router;
