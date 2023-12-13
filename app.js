@@ -9,7 +9,7 @@ const cors = require("cors");
 // for passing all incoming request body
 const bodyParser = require("body-parser");
 
-// importing event Routes
+// importing smartPlate Routes
 const smartPlateRoutes = require("./routes/smartPlate");
 
 // // importing users Routes
@@ -48,7 +48,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// All events routes hit this middleware
+// All smartplate routes hit this middleware
 app.use("/api/gpt", smartPlateRoutes);
 
 // // All users routes hit this middleware

@@ -10,7 +10,7 @@ const UserSchema = new Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true, minlength: 8 },
   // Associating a smartPlate model to the user model using reference Id
-  // it is put on an array to signify multi events can be owned by a user
+  // it is put on an array to signify multi smartPlate can be owned by a user
   smartPlates: [
     { type: Schema.Types.ObjectId, required: true, ref: "SmartPlate" },
   ],

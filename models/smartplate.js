@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const Schema = mongoose.Schema;
 
-// creation of Event Schema
+// creation of SmartPlate Schema
 const SmartPlateSchema = new Schema({
   ingredients: { type: String, required: true },
   cusineType: { type: String, required: true },

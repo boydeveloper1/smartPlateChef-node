@@ -6,7 +6,7 @@ const router = express.Router();
 
 const checkAuth = require("../middleware/authentication");
 
-// Requiring the event controller
+// Requiring the smartPlate controller
 const smartPlate = require("../controllers/smartPlate.js");
 
 // get smartPlates
