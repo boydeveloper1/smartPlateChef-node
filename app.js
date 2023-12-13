@@ -48,6 +48,8 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use(cors());
+
 // All smartplate routes hit this middleware
 app.use("/api/gpt", smartPlateRoutes);
 
